@@ -1,8 +1,6 @@
 """ Contains async utility functions """
 
 import discord
-import requests
-import xmltodict
 from constants import CATEGORY_NAME
 from discord import CategoryChannel, Guild, TextChannel
 
@@ -70,19 +68,3 @@ def format_channel_name(channel_name: str) -> str:
     """Formats the desired channel name to the name given by Discord"""
 
     return channel_name.replace(" ", "-")
-
-
-def get_announcements_list(url: str) -> list:
-    """Retrieves the announcements XML of a course (given the `url`) and returns the list of announcements"""
-
-    response = requests.get(url)
-
-    if response.status_code == 200:
-        xml_data = response.text
-
-        dict_data = xmltodict.parse(xml_data)
-
-        # Remove unnecessary info, returning only the announcements list
-        return dict_data["rss"]["channel"]["item"]
-    else:
-        raise Exception(f"Failed to retrieve XML. Status code: {response.status_code}")
