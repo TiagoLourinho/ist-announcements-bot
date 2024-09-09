@@ -1,6 +1,6 @@
 """ Contains the methods corresponding to bot events """
 
-from bot import bot
+from .bot import bot
 
 
 @bot.event

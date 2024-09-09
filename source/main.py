@@ -1,8 +1,8 @@
 import os
 
-from bot import bot
+from discord_bot.bot import bot
+from discord_bot.events import on_ready  # Not used but needs to be imported to register
 from dotenv import load_dotenv
-from events import on_ready
 
 load_dotenv()
 
