@@ -1,9 +1,18 @@
 """ Contains the commands the bot answers to """
 
+from constants import CATEGORY_NAME
+from discord.ext import commands
+
 from .bot import bot
 
 
+def in_allowed_category(ctx):
+    """Checks if the bot should answer (only if inside the bot category)"""
+    return ctx.channel.category and ctx.channel.category.name == CATEGORY_NAME
+
+
 @bot.command()
+@commands.check(in_allowed_category)
 async def help(ctx):
 
     help_text = """
