@@ -16,8 +16,14 @@ async def on_ready():
 
         print(f"Initializing guild '{guild.name}'")
 
+        # Create category and manage channel
         await create_bot_category(guild)
-
-        await create_channel(
+        channel = await create_channel(
             guild=guild, channel_name="Manage", allow_user_messages=True
         )
+
+        # Display hello message and commands
+        ctx = await bot.get_context(
+            await channel.send("Hello! Ready to track the announcements...")
+        )
+        await bot.get_command("help").invoke(ctx)

@@ -16,7 +16,7 @@ def in_allowed_category(ctx):
 async def help(ctx):
 
     help_text = """
-**Bot Commands:**
+**My Commands:**
 
 `$help` 
 - *See this message.*
