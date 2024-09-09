@@ -21,7 +21,9 @@ async def create_bot_category(guild: Guild) -> CategoryChannel:
     return category
 
 
-async def create_channel(guild: Guild, channel_name: str) -> TextChannel:
+async def create_channel(
+    guild: Guild, channel_name: str, allow_user_messages=False
+) -> TextChannel:
     """Creates a channel with `channel_name` in the current `guild` (under the bot category)"""
 
     channel_name = format_channel_name(channel_name)
@@ -35,8 +37,20 @@ async def create_channel(guild: Guild, channel_name: str) -> TextChannel:
     existing_channel = discord.utils.get(category.channels, name=channel_name)
 
     if existing_channel is None:
+
+        # Set permissions of the channel
+        # The bot will have an interactive channel and the rest are only informative so the user can't write there
+        overwrites = {
+            guild.default_role: discord.PermissionOverwrite(
+                send_messages=allow_user_messages,
+                view_channel=True,
+                read_message_history=True,
+            ),
+            guild.me: discord.PermissionOverwrite(send_messages=True),
+        }
+
         existing_channel = await guild.create_text_channel(
-            channel_name, category=category
+            channel_name, category=category, overwrites=overwrites
         )
         print(f"Channel '{channel_name}' was created")
     else:
