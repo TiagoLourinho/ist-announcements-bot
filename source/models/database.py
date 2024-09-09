@@ -43,3 +43,8 @@ class Database:
             raise ValueError("This course doesn't exist")
         else:
             self.__data[guild.id] = temp
+
+    def get_courses_list(self, guild: Guild) -> list[Course]:
+        """Returns the list of courses being tracked"""
+
+        return self.__data[guild.id] if guild.id in self.__data else []

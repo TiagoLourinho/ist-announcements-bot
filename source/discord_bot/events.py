@@ -7,6 +7,8 @@ from .bot import bot
 
 @bot.event
 async def on_ready():
+    """Starts the bot and creates the channels"""
+
     print(f"Logged in as {bot.user}, starting up...")
 
     for guild in bot.guilds:

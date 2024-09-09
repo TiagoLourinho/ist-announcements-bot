@@ -3,7 +3,7 @@
 from constants import CATEGORY_NAME
 from discord.ext import commands
 
-from .bot import bot
+from .bot import bot, db
 
 
 def in_allowed_category(ctx):
@@ -14,6 +14,7 @@ def in_allowed_category(ctx):
 @bot.command()
 @commands.check(in_allowed_category)
 async def help(ctx):
+    """Displays bot commands"""
 
     help_text = """
 **My Commands:**
@@ -36,3 +37,22 @@ async def help(ctx):
 """
 
     await ctx.send(help_text)
+
+
+@bot.command()
+@commands.check(in_allowed_category)
+async def tracked(ctx):
+    """Display the current tracked courses"""
+
+    courses = db.get_courses_list(ctx.guild)
+
+    if len(courses) == 0:
+        await ctx.send(
+            "Currently there aren't any courses being tracked. Add some using `$add`."
+        )
+    else:
+        text = "**Courses being tracked:**\n" + "\n".join(
+            [f"- {course.name}" for course in courses]
+        )
+
+        await ctx.send(text)
