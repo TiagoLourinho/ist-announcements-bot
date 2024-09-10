@@ -3,6 +3,7 @@
 from utils import create_bot_category, create_channel, delete_bot_category
 
 from .bot import bot
+from .tasks import update_announcements
 
 
 @bot.event
@@ -29,3 +30,7 @@ async def on_ready():
             await channel.send("Hello! Ready to track the announcements...")
         )
         await bot.get_command("help").invoke(ctx)
+
+    # Start the update announcements task
+    if not update_announcements.is_running():
+        update_announcements.start()
