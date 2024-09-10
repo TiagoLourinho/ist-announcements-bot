@@ -2,7 +2,12 @@
 
 from constants import CATEGORY_NAME, MANAGE_CHANNEL
 from discord.ext import commands
-from utils import create_channel, delete_channel, send_announcements_changes
+from utils import (
+    create_channel,
+    delete_channel,
+    get_init_message,
+    send_announcements_changes,
+)
 
 from .bot import bot, db
 
@@ -77,6 +82,7 @@ async def add(ctx, course_link: str):
 
         # Get the announcements changes and send the messages
         changes = course.update_announcements()
+        await channel.send(get_init_message(course))
         await send_announcements_changes(channel=channel, changes=changes)
 
         await ctx.send("Course added. Check the new channel with the announcements.")

@@ -4,6 +4,7 @@ import discord
 from constants import CATEGORY_NAME
 from discord import CategoryChannel, Guild, TextChannel
 from models.announcement import Announcement, AnnouncementActions
+from models.course import Course
 
 #################### Async ####################
 
@@ -116,6 +117,17 @@ def format_channel_name(channel_name: str) -> str:
 
     return channel_name.replace(" ", "-").lower()
 
+def get_init_message(course: Course) -> str:
+    """Returns the formatted message for this course (used in the channel creation to display the course info)"""
+
+    header = f"## **[{course.name} CHANNEL] - {course.semester.replace("-","º ")} of {course.years.replace("-","/")}**"
+
+    course_link = f"[Click here to see the course page.]({course.link})"
+
+    footer = f"-# Currently there are {len(course.announcements)} announcements in this course."
+
+    return header + "\n\n" + course_link + "\n\n" + footer
+   
 
 def get_alert_message(announcement: Announcement, action: AnnouncementActions) -> str:
     """Returns the formatted message for this announcement and action"""

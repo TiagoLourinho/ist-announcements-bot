@@ -106,7 +106,12 @@ class Course:
 
             # Convert to dict and remove unnecessary info present in the original XML
             dict_data = xmltodict.parse(xml_data)
-            announcements_list = dict_data["rss"]["channel"]["item"]
+            dict_data = dict_data["rss"]["channel"]
+            if "item" in dict_data:
+                announcements_list = dict_data["item"]
+            else:
+                # If item isn't on the dict, then it is because there aren't any announcements on the course
+                announcements_list = []
 
             # When there is only 1 announcement, the API returns just the announcement, instead of a list with just 1 element
             if isinstance(announcements_list, dict):
