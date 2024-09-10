@@ -1,5 +1,6 @@
 """ Contains the methods corresponding to bot events """
 
+from discord.ext import commands
 from utils import create_bot_category, create_channel, delete_bot_category
 
 from .bot import bot
@@ -34,3 +35,14 @@ async def on_ready():
     # Start the update announcements task
     if not update_announcements.is_running():
         update_announcements.start()
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    """Displays help message when there is an error"""
+
+    if isinstance(error, commands.CheckFailure):
+        return  # If there was a check failure nothing should be done, the bot just won't respond
+    else:
+        ctx = await bot.get_context(await ctx.send("Oops! Something wasn't right..."))
+        await bot.get_command("help").invoke(ctx)
