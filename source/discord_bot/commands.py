@@ -39,7 +39,7 @@ async def help(ctx):
 - *Starts tracking the announcements of the course defined by `course_link`.* 
 - *The link should be the home page link of the course like:*
 
-`https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre`
+https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre
 
 `$remove <course_name>` 
 - *Stops tracking the announcements of the course with `course_name`.* 
