@@ -5,3 +5,6 @@ CATEGORY_NAME = "IST Announcements"
 
 MANAGE_CHANNEL = "manage"
 """ The manage channel, bot will only answer commands inside here """
+
+UPDATE_INTERVAL = 15  # minutes
+""" The interval between each automatic update"""

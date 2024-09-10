@@ -76,9 +76,8 @@ async def delete_bot_category(guild: Guild):
     else:
         print(f"Category '{CATEGORY_NAME}' didn't exist, skipping deletion")
 
-async def delete_channel(
-    guild: Guild, channel_name: str
-) -> TextChannel:
+
+async def delete_channel(guild: Guild, channel_name: str) -> TextChannel:
     """Deletes a channel with `channel_name` in the current `guild` (under the bot category)"""
 
     channel_name = format_channel_name(channel_name)
@@ -86,18 +85,36 @@ async def delete_channel(
     category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
 
     if category is None:
-        print(f"Category '{CATEGORY_NAME}' didn't exist, skipping channel '{channel_name}' deletion")
+        print(
+            f"Category '{CATEGORY_NAME}' didn't exist, skipping channel '{channel_name}' deletion"
+        )
         return
 
     existing_channel = discord.utils.get(category.channels, name=channel_name)
 
-    if existing_channel  is not None:
+    if existing_channel is not None:
         await existing_channel.delete()
         print(f"Channel '{channel_name}' was deleted")
     else:
         print(f"Channel '{channel_name}' didn't exist, skipping deletion")
 
-    
+
+async def get_channel(guild: Guild, channel_name: str) -> TextChannel:
+    """Returns the channel with `channel_name` inside the bot category"""
+
+    channel_name = format_channel_name(channel_name)
+
+    category = discord.utils.get(guild.categories, name=CATEGORY_NAME)
+
+    if category is None:
+        raise ValueError("Can't retrieve channel as category didn't exist.")
+
+    existing_channel = discord.utils.get(category.channels, name=channel_name)
+
+    if existing_channel is not None:
+        return existing_channel
+    else:
+        raise ValueError(f"Can't retrieve channel as '{channel_name}' didn't exist.")
 
 
 async def send_announcements_changes(
@@ -106,7 +123,11 @@ async def send_announcements_changes(
     """Send the messages informing the user of the latest changes in the announcements"""
 
     for change in changes:
-        await channel.send(get_alert_message(announcement=change["announcement"], action=change["action"]))
+        await channel.send(
+            get_alert_message(
+                announcement=change["announcement"], action=change["action"]
+            )
+        )
 
 
 #################### Sync ####################
@@ -117,24 +138,25 @@ def format_channel_name(channel_name: str) -> str:
 
     return channel_name.replace(" ", "-").lower()
 
+
 def get_init_message(course: Course) -> str:
     """Returns the formatted message for this course (used in the channel creation to display the course info)"""
 
-    header = f"## **[{course.name} CHANNEL] - {course.semester.replace("-","º ")} of {course.years.replace("-","/")}**"
+    header = f"## **[{course.name} CHANNEL] - {course.semester.replace('-','º ')} of {course.years.replace('-','/')}**"
 
     course_link = f"[Click here to see the course page.]({course.link})"
 
     footer = f"-# Currently there are {len(course.announcements)} announcements in this course."
 
     return header + "\n\n" + course_link + "\n\n" + footer
-   
+
 
 def get_alert_message(announcement: Announcement, action: AnnouncementActions) -> str:
     """Returns the formatted message for this announcement and action"""
 
     header = f"## **[{action.name} ANNOUNCEMENT] - {announcement.title}**"
 
-    footer = f"-# Published by {announcement.author} @ {announcement.pub_date.strftime("%H:%M of %A (%d/%m/%Y)")}."
+    footer = f"-# Published by {announcement.author} @ {announcement.pub_date.strftime('%H:%M of %A (%d/%m/%Y)')}."
 
     # Link doesn't make sense in the deleted action
     if action in (AnnouncementActions.ADDED, AnnouncementActions.UPDATED):

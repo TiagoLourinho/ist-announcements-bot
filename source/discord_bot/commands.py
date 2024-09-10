@@ -1,10 +1,13 @@
 """ Contains the commands the bot answers to """
 
-from constants import CATEGORY_NAME, MANAGE_CHANNEL
+from datetime import datetime
+
+from constants import CATEGORY_NAME, MANAGE_CHANNEL, UPDATE_INTERVAL
 from discord.ext import commands
 from utils import (
     create_channel,
     delete_channel,
+    get_channel,
     get_init_message,
     send_announcements_changes,
 )
@@ -26,7 +29,7 @@ def in_allowed_category(ctx):
 async def help(ctx):
     """Displays bot commands"""
 
-    help_text = """
+    help_text = f"""
 **My Commands:**
 
 `$help` 
@@ -44,6 +47,9 @@ https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre
 `$remove <course_name>` 
 - *Stops tracking the announcements of the course with `course_name`.* 
 - *The name should be the same name used in the output of `$tracked`.*
+
+`$update` 
+- *Triggers a manual update of the announcements (they update automatically every {UPDATE_INTERVAL} minutes).*
 """
 
     await ctx.send(help_text)
@@ -82,7 +88,9 @@ async def add(ctx, course_link: str):
 
         # Get the announcements changes and send the messages
         changes = course.update_announcements()
-        await channel.send(get_init_message(course))
+        await channel.send(
+            get_init_message(course)
+        )  # Done after the update (otherwise the length of the announcements list will be 0)
         await send_announcements_changes(channel=channel, changes=changes)
 
         await ctx.send("Course added. Check the new channel with the announcements.")
@@ -109,3 +117,25 @@ async def remove(ctx, course_name: str):
         await ctx.send(str(e) + "\n")
 
         await bot.get_command("tracked").invoke(ctx)
+
+
+@bot.command()
+@commands.check(in_allowed_category)
+async def update(ctx):
+    """Updates the announcements of each course"""
+
+    n_changes = 0
+    for course in db.get_courses_list(guild=ctx.guild):
+
+        changes = course.update_announcements()
+        await send_announcements_changes(
+            channel=await get_channel(guild=ctx.guild, channel_name=course.name),
+            changes=changes,
+        )
+
+        n_changes += len(changes)
+
+    manage_channel = await get_channel(guild=ctx.guild, channel_name=MANAGE_CHANNEL)
+    await manage_channel.send(
+        f"Updated announcements @ {datetime.now().strftime('%H:%M of %d/%m/%Y')} **({n_changes} changes)**"
+    )

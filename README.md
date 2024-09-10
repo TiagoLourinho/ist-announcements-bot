@@ -25,6 +25,8 @@ Follow these steps:
 
 - `$remove <course_name>`: _Stops tracking the announcements of the course with `course_name`. The name should be the same name used in the output of `$tracked`._
 
+- `$update`: _Triggers a manual update of the announcements (they update automatically every `UPDATE_INTERVAL` minutes)._
+
 ## Example
 
 ![Bot startup message](assets/bot_example.png "Bot startup message")
