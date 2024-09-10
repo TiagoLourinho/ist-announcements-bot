@@ -29,7 +29,7 @@ class Course:
 
         if not self.__is_link_valid(self.link):
             raise ValueError(
-                "Invalid Fenix course link, should follow this format: 'https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre'"
+                "Invalid Fenix course link, should follow this format: https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre"
             )
 
         # Link example:
@@ -105,7 +105,12 @@ class Course:
             xml_data = response.text  # XML
 
             # Convert to dict and remove unnecessary info present in the original XML
-            dict_data = xmltodict.parse(xml_data)["rss"]["channel"]["item"]
+            dict_data = xmltodict.parse(xml_data)
+            announcements_list = dict_data["rss"]["channel"]["item"]
+
+            # When there is only 1 announcement, the API returns just the announcement, instead of a list with just 1 element
+            if isinstance(announcements_list, dict):
+                announcements_list = [announcements_list]
 
             announcements = [
                 Announcement(
@@ -113,9 +118,9 @@ class Course:
                     description=announcement["description"],
                     link=announcement["link"],
                     author=announcement["author"],
-                    pub_date=announcement["pub_date"],
+                    pub_date=announcement["pubDate"],
                 )
-                for announcement in dict_data
+                for announcement in announcements_list
             ]
 
             return announcements
@@ -125,21 +130,27 @@ class Course:
                 f"Failed to retrieve XML. Status code: {response.status_code}"
             )
 
-    def update_announcements(self) -> dict[AnnouncementActions, list[Announcement]]:
-        """Fetches the latest announcements list and returns a dict with the changes to be used by the bot"""
+    def update_announcements(
+        self,
+    ) -> list[dict[str, Announcement | AnnouncementActions]]:
+        """Fetches the latest announcements list and returns a dict with the changes to be used by the bot (each "change" contains the announcement and the action type)"""
 
         new_announcements = {
             announcement.id: announcement
-            for announcement in self.__fetch_announcements_list()
+            for announcement in self.__sort_announcements_by_date(
+                self.__fetch_announcements_list()
+            )
         }
         old_announcements = {
             announcement.id: announcement for announcement in self.announcements
         }
 
         # Keep track of the announcements added, deleted or updated
-        added = []
-        deleted = []
-        updated = []
+        changed = []
+        get_dict = lambda announcement, action: {
+            "announcement": announcement,
+            "action": action,
+        }
 
         # Search for added and updated announcements
         for id, announcement in new_announcements.items():
@@ -150,26 +161,20 @@ class Course:
                     != new_announcements[id].description
                 ):
                     # The id is the same, but the title or description changed, so the announcement was updated
-                    updated.append(announcement)
+                    changed.append(get_dict(announcement, AnnouncementActions.UPDATED))
                 else:
                     # Nothing happened with the announcement (id, title and description remained the same)
                     pass
             else:
                 # Not present in the old announcements list, so it is a new announcement
-                added.append(announcement)
+                changed.append(get_dict(announcement, AnnouncementActions.ADDED))
 
         # Search for deleted announcements
         for id, announcement in old_announcements.items():
             if id not in new_announcements:
                 # Not present in the new announcements list so was deleted
-                deleted.append(announcement)
+                changed.append(get_dict(announcement, AnnouncementActions.DELETED))
 
-        self.announcements = self.__sort_announcements_by_date(
-            list(new_announcements.values())
-        )
+        self.announcements = list(new_announcements.values())
 
-        return {
-            AnnouncementActions.ADDED: added,
-            AnnouncementActions.DELETED: deleted,
-            AnnouncementActions.UPDATED: updated,
-        }
+        return changed

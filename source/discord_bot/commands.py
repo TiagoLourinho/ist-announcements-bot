@@ -1,14 +1,19 @@
 """ Contains the commands the bot answers to """
 
-from constants import CATEGORY_NAME
+from constants import CATEGORY_NAME, MANAGE_CHANNEL
 from discord.ext import commands
+from utils import create_channel, delete_channel, send_announcements_changes
 
 from .bot import bot, db
 
 
 def in_allowed_category(ctx):
     """Checks if the bot should answer (only if inside the bot category)"""
-    return ctx.channel.category and ctx.channel.category.name == CATEGORY_NAME
+    return (
+        ctx.channel.category
+        and ctx.channel.category.name == CATEGORY_NAME
+        and ctx.channel.name == MANAGE_CHANNEL
+    )
 
 
 @bot.command()
@@ -56,3 +61,45 @@ async def tracked(ctx):
         )
 
         await ctx.send(text)
+
+
+@bot.command()
+@commands.check(in_allowed_category)
+async def add(ctx, course_link: str):
+    """Adds a course"""
+
+    try:
+
+        # Add course and create course channel
+        course = db.add_course(guild=ctx.guild, course_link=course_link)
+        await ctx.send("Adding course...")
+        channel = await create_channel(guild=ctx.guild, channel_name=course.name)
+
+        # Get the announcements changes and send the messages
+        changes = course.update_announcements()
+        await send_announcements_changes(channel=channel, changes=changes)
+
+        await ctx.send("Course added. Check the new channel with the announcements.")
+
+    except Exception as e:
+        await ctx.send(e)
+
+
+@bot.command()
+@commands.check(in_allowed_category)
+async def remove(ctx, course_name: str):
+    """Removes a course"""
+
+    try:
+
+        # Removes a course and deletes course channel
+        db.remove_course(guild=ctx.guild, course_name=course_name)
+        await ctx.send("Removing course...")
+        await delete_channel(guild=ctx.guild, channel_name=course_name)
+
+        await ctx.send("Course removed.")
+
+    except Exception as e:
+        await ctx.send(str(e) + "\n")
+
+        await bot.get_command("tracked").invoke(ctx)

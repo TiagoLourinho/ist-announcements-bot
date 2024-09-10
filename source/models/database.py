@@ -15,7 +15,7 @@ class Database:
         # (The dict is indexed using the guild ID)
         self.__data: dict[int, list[Course]] = dict()
 
-    def add_course(self, guild: Guild, course_link: str):
+    def add_course(self, guild: Guild, course_link: str) -> Course:
         """Adds a course to a guild"""
 
         if guild.id not in self.__data:
@@ -24,15 +24,18 @@ class Database:
         # Check if this course already exists
         for course in self.__data[guild.id]:
             if course.link == course_link:
-                raise ValueError("This course is already being tracked")
+                raise ValueError("This course is already being tracked.")
 
-        self.__data[guild.id].append(Course(link=course_link))
+        course = Course(link=course_link)
+        self.__data[guild.id].append(course)
+
+        return course
 
     def remove_course(self, guild: Guild, course_name: str):
         """Removes a course from a guild"""
 
         if guild.id not in self.__data:
-            raise ValueError(f"Server {guild.name} isn't using the bot")
+            raise ValueError(f"Server {guild.name} isn't using the bot.")
 
         temp = [
             course for course in self.__data[guild.id] if course.name != course_name
@@ -40,7 +43,7 @@ class Database:
 
         # If the length is the same no element was removed
         if len(temp) == len(self.__data[guild.id]):
-            raise ValueError("This course doesn't exist")
+            raise ValueError("This course doesn't exist.")
         else:
             self.__data[guild.id] = temp
 
