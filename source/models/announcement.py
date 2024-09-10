@@ -53,4 +53,4 @@ class Announcement:
         # Remove the HTML tags from the description (unescaping first as the initial contains encoded HTML tags)
         self.description = BeautifulSoup(
             html.unescape(self.description), "lxml"
-        ).get_text()
+        ).get_text(separator="\n")
