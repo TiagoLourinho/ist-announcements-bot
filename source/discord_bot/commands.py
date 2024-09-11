@@ -1,6 +1,7 @@
 """ Contains the commands the bot answers to """
 
 from datetime import datetime
+from functools import wraps
 
 from constants import CATEGORY_NAME, MANAGE_CHANNEL, UPDATE_INTERVAL
 from discord.ext import commands
@@ -14,18 +15,43 @@ from utils import (
 
 from .bot import bot, db
 
+# Flag to avoid running multiple commands at the same time
+processing_command = False
 
-def in_allowed_category(ctx):
-    """Checks if the bot should answer (only if inside the bot category)"""
+
+def handle_processing_flag(func):
+    """Decorator to set/unset the flag while running a command"""
+
+    @wraps(func)
+    async def wrapper(ctx, *args, **kwargs):
+        global processing_command
+
+        if processing_command:
+            await ctx.send("I'm already processing another command. Please wait.")
+            return
+
+        processing_command = True
+        try:
+            return await func(ctx, *args, **kwargs)
+        finally:
+            processing_command = False
+
+    return wrapper
+
+
+def should_answer_command(ctx):
+    """Checks if the bot should answer the command"""
     return (
         ctx.channel.category
-        and ctx.channel.category.name == CATEGORY_NAME
-        and ctx.channel.name == MANAGE_CHANNEL
+        and ctx.channel.category.name
+        == CATEGORY_NAME  # Should be inside the bot category
+        and ctx.channel.name == MANAGE_CHANNEL  # and on the manage channel
     )
 
 
 @bot.command()
-@commands.check(in_allowed_category)
+@commands.check(should_answer_command)
+@handle_processing_flag
 async def help(ctx):
     """Displays bot commands"""
 
@@ -56,7 +82,8 @@ https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre
 
 
 @bot.command()
-@commands.check(in_allowed_category)
+@commands.check(should_answer_command)
+@handle_processing_flag
 async def tracked(ctx):
     """Display the current tracked courses"""
 
@@ -75,7 +102,8 @@ async def tracked(ctx):
 
 
 @bot.command()
-@commands.check(in_allowed_category)
+@commands.check(should_answer_command)
+@handle_processing_flag
 async def add(ctx, course_link: str):
     """Adds a course"""
 
@@ -100,7 +128,8 @@ async def add(ctx, course_link: str):
 
 
 @bot.command()
-@commands.check(in_allowed_category)
+@commands.check(should_answer_command)
+@handle_processing_flag
 async def remove(ctx, course_name: str):
     """Removes a course"""
 
@@ -120,7 +149,8 @@ async def remove(ctx, course_name: str):
 
 
 @bot.command()
-@commands.check(in_allowed_category)
+@commands.check(should_answer_command)
+@handle_processing_flag
 async def update(ctx):
     """Updates the announcements of each course"""
 
