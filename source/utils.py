@@ -162,4 +162,21 @@ def get_alert_message(announcement: Announcement, action: AnnouncementActions) -
     if action in (AnnouncementActions.ADDED, AnnouncementActions.UPDATED):
         footer += f" [Click here to see the announcement.]({announcement.link})"
 
-    return header + "\n\n" + announcement.description + "\n\n" + footer
+    string = header + "\n\n" + announcement.description + "\n\n" + footer
+
+    # Discord has a maximum message length of 2000 chars, so if it is exceeded don't display the description
+    if len(string) > 2000:
+        replacement = "*Description is too long to display.*"
+
+        # Link doesn't make sense in the deleted action
+        if action in (AnnouncementActions.ADDED, AnnouncementActions.UPDATED):
+            replacement += (
+                f" *Please check the [announcement on Fenix]({announcement.link}).*"
+            )
+
+        string = string.replace(
+            announcement.description,
+            replacement,
+        )
+
+    return string
