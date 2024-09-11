@@ -27,6 +27,8 @@ Follow these steps:
 
 - `$update`: _Triggers a manual update of the announcements (they update automatically every `UPDATE_INTERVAL` minutes)._
 
-## Example
+## Examples
 
 ![Bot startup message](assets/bot_example.png "Bot startup message")
+
+![Bot starting a channel for a course](assets/bot_example_2.png "Bot starting a channel for a course")
