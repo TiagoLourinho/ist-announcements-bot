@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 import requests
 import xmltodict
@@ -29,7 +30,7 @@ class Course:
 
         if not self.__is_link_valid(self.link):
             raise ValueError(
-                "Invalid Fenix course link, should follow this format: https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre"
+                "Invalid Fenix course link, please check that this course is from the current school year and that it follows the required format: https://fenix.tecnico.ulisboa.pt/disciplinas/XXXX/XXXX-XXXX/X-semestre"
             )
 
         # Link example:
@@ -79,6 +80,18 @@ class Course:
                 return False
         except:
             return False
+
+        # Only allow links of the current school year to avoid tracking courses that have already finished
+        current_year = str(datetime.now().year)
+        current_month = datetime.now().month
+
+        # Check the correct year from "2024-2025" depending on the current month
+        if current_month >= 9:  # After september
+            if not (current_year == years[0]):
+                return False
+        else:  # Before september of the next year
+            if not (current_year == years[1]):
+                return False
 
         # Only 2 possible semesters
         if not (semester in ["1", "2"]):
