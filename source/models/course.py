@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from time import sleep
 
 import requests
 import xmltodict
@@ -111,42 +112,46 @@ class Course:
 
         # Using Fenix API, see the example in https://fenixedu.org/dev/api/#get-coursesid
         url = f"https://fenix.tecnico.ulisboa.pt/disciplinas/{self.name}/{self.years}/{self.semester}/rss/announcement"
+        sleep_time = 60 * 5
 
-        response = requests.get(url)
+        while True:
+            response = requests.get(url)
 
-        if response.status_code == 200:
-            xml_data = response.text  # XML
+            if response.status_code == 200:
+                xml_data = response.text  # XML
 
-            # Convert to dict and remove unnecessary info present in the original XML
-            dict_data = xmltodict.parse(xml_data)
-            dict_data = dict_data["rss"]["channel"]
-            if "item" in dict_data:
-                announcements_list = dict_data["item"]
+                # Convert to dict and remove unnecessary info present in the original XML
+                dict_data = xmltodict.parse(xml_data)
+                dict_data = dict_data["rss"]["channel"]
+                if "item" in dict_data:
+                    announcements_list = dict_data["item"]
+                else:
+                    # If item isn't on the dict, then it is because there aren't any announcements on the course
+                    announcements_list = []
+
+                # When there is only 1 announcement, the API returns just the announcement, instead of a list with just 1 element
+                if isinstance(announcements_list, dict):
+                    announcements_list = [announcements_list]
+
+                announcements = [
+                    Announcement(
+                        title=announcement["title"],
+                        description=announcement["description"],
+                        link=announcement["link"],
+                        author=announcement["author"],
+                        pub_date=announcement["pubDate"],
+                    )
+                    for announcement in announcements_list
+                ]
+
+                return announcements
+
             else:
-                # If item isn't on the dict, then it is because there aren't any announcements on the course
-                announcements_list = []
 
-            # When there is only 1 announcement, the API returns just the announcement, instead of a list with just 1 element
-            if isinstance(announcements_list, dict):
-                announcements_list = [announcements_list]
-
-            announcements = [
-                Announcement(
-                    title=announcement["title"],
-                    description=announcement["description"],
-                    link=announcement["link"],
-                    author=announcement["author"],
-                    pub_date=announcement["pubDate"],
+                print(
+                    f"Failed to retrieve XML using: {url}\nStatus code: {response.status_code}\nTrying again in {sleep_time} seconds."
                 )
-                for announcement in announcements_list
-            ]
-
-            return announcements
-
-        else:
-            raise Exception(
-                f"Failed to retrieve XML. Status code: {response.status_code}"
-            )
+                sleep(sleep_time)
 
     def update_announcements(
         self,
