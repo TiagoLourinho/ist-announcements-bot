@@ -6,35 +6,44 @@ from utils import create_bot_category, create_channel, delete_bot_category
 from .bot import bot
 from .tasks import update_announcements
 
+# When the bot loses WIFI connection, it runs `on_ready` again after reconnecting
+# creating all the channels and etc, so use this flag to avoid that
+already_started_up = False
+
 
 @bot.event
 async def on_ready():
     """Starts the bot and creates the channels"""
 
-    print(f"Logged in as {bot.user}, starting up...")
+    global already_started_up
 
-    for guild in bot.guilds:
+    if not already_started_up:
+        print(f"Logged in as {bot.user}, starting up...")
 
-        # Clean up
-        await delete_bot_category(guild)
+        for guild in bot.guilds:
 
-        print(f"Initializing guild '{guild.name}'")
+            # Clean up
+            await delete_bot_category(guild)
 
-        # Create category and manage channel
-        await create_bot_category(guild)
-        channel = await create_channel(
-            guild=guild, channel_name="Manage", allow_user_messages=True
-        )
+            print(f"Initializing guild '{guild.name}'")
 
-        # Display hello message and commands
-        ctx = await bot.get_context(
-            await channel.send("Hello! Ready to track the announcements...")
-        )
-        await bot.get_command("help").invoke(ctx)
+            # Create category and manage channel
+            await create_bot_category(guild)
+            channel = await create_channel(
+                guild=guild, channel_name="Manage", allow_user_messages=True
+            )
 
-    # Start the update announcements task
-    if not update_announcements.is_running():
-        update_announcements.start()
+            # Display hello message and commands
+            ctx = await bot.get_context(
+                await channel.send("Hello! Ready to track the announcements...")
+            )
+            await bot.get_command("help").invoke(ctx)
+
+        # Start the update announcements task
+        if not update_announcements.is_running():
+            update_announcements.start()
+
+        already_started_up = True
 
 
 @bot.event
