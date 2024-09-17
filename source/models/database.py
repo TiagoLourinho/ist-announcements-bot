@@ -1,3 +1,6 @@
+import os
+import pickle
+
 from discord import Guild
 
 from .course import Course
@@ -8,6 +11,8 @@ class Database:
     This class stores data related to the bot operation
     and acts as an interface in case it is upgraded to an actual database in the future
     """
+
+    __BACKUP_FILE = "db.pkl"
 
     def __init__(self) -> None:
 
@@ -51,3 +56,19 @@ class Database:
         """Returns the list of courses being tracked"""
 
         return self.__data[guild.id] if guild.id in self.__data else []
+
+    def save_backup(self):
+        """Saves a backup of the database in a file"""
+
+        with open(self.__BACKUP_FILE, "wb") as backup_file:
+            pickle.dump(self.__data, backup_file)
+
+    def try_load_backup(self):
+        """Tries to load a backup of the database (returns a boolean representing whether it was successful or not)"""
+
+        if os.path.exists(self.__BACKUP_FILE):
+            with open(self.__BACKUP_FILE, "rb") as backup_file:
+                self.__data = pickle.load(backup_file)
+                return True
+        else:
+            return False

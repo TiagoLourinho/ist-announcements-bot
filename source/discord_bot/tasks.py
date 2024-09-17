@@ -18,3 +18,5 @@ async def update_announcements():
                 await channel.send("Triggering automatic update...")
             )
             await bot.get_command("update").invoke(ctx)
+
+    db.save_backup()

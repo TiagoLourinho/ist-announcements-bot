@@ -3,7 +3,7 @@
 from discord.ext import commands
 from utils import create_bot_category, create_channel, delete_bot_category
 
-from .bot import bot
+from .bot import bot, db
 from .tasks import update_announcements
 
 # When the bot loses WIFI connection, it runs `on_ready` again after reconnecting
@@ -20,24 +20,27 @@ async def on_ready():
     if not already_started_up:
         print(f"Logged in as {bot.user}, starting up...")
 
-        for guild in bot.guilds:
+        # Only create the channels and etc if there isn't a backup
+        # (for example in a power cut, the bot shouldn't recreate everything, just resume activity from the previous state)
+        if not db.try_load_backup():
+            for guild in bot.guilds:
 
-            # Clean up
-            await delete_bot_category(guild)
+                # Clean up
+                await delete_bot_category(guild)
 
-            print(f"Initializing guild '{guild.name}'")
+                print(f"Initializing guild '{guild.name}'")
 
-            # Create category and manage channel
-            await create_bot_category(guild)
-            channel = await create_channel(
-                guild=guild, channel_name="Manage", allow_user_messages=True
-            )
+                # Create category and manage channel
+                await create_bot_category(guild)
+                channel = await create_channel(
+                    guild=guild, channel_name="Manage", allow_user_messages=True
+                )
 
-            # Display hello message and commands
-            ctx = await bot.get_context(
-                await channel.send("Hello! Ready to track the announcements...")
-            )
-            await bot.get_command("help").invoke(ctx)
+                # Display hello message and commands
+                ctx = await bot.get_context(
+                    await channel.send("Hello! Ready to track the announcements...")
+                )
+                await bot.get_command("help").invoke(ctx)
 
         # Start the update announcements task
         if not update_announcements.is_running():
