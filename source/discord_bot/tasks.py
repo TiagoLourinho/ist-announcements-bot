@@ -18,12 +18,8 @@ async def update_announcements():
     global LAST_UPDATE
 
     current_time = time.time()
-    update_interval_in_seconds = UPDATE_INTERVAL * 60
 
-    if (
-        LAST_UPDATE is not None
-        and current_time - LAST_UPDATE < update_interval_in_seconds
-    ):
+    if LAST_UPDATE is not None and current_time - LAST_UPDATE < 60:  # s
         # Since this bot is running as a service, when it is shutdown during the night it will try to "make up"
         # for the missed checks after restarting, so if "too close" to the last check time just return
         return
