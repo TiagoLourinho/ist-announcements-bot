@@ -125,6 +125,8 @@ async def add(ctx, course_link: str):
 
     except Exception as e:
         await ctx.send(e)
+    finally:
+        db.save_backup()
 
 
 @bot.command()
@@ -146,6 +148,8 @@ async def remove(ctx, course_name: str):
         await ctx.send(str(e) + "\n")
 
         await bot.get_command("tracked").invoke(ctx)
+    finally:
+        db.save_backup()
 
 
 @bot.command()
