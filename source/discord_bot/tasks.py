@@ -1,6 +1,7 @@
 """ Contains the bot scheduled tasks """
 
 import time
+from datetime import datetime
 
 from constants import MANAGE_CHANNEL, UPDATE_INTERVAL
 from discord.ext import tasks
@@ -16,6 +17,12 @@ async def update_announcements():
     """Updates the announcements on every guild"""
 
     global LAST_UPDATE
+
+    current_hour = datetime.now().hour
+
+    # Skip update during the night
+    if 1 < current_hour < 9:
+        return
 
     current_time = time.time()
 
