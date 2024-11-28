@@ -121,7 +121,13 @@ class Course:
                 xml_data = response.text  # XML
 
                 # Convert to dict and remove unnecessary info present in the original XML
-                dict_data = xmltodict.parse(xml_data)
+                try:
+                    dict_data = xmltodict.parse(xml_data)
+                except Exception as e:
+                    print("The following XML resulted in: ", str(e))
+                    print(xml_data)
+                    return []  # It will recover from this error on the next update
+
                 dict_data = dict_data["rss"]["channel"]
                 if "item" in dict_data:
                     announcements_list = dict_data["item"]
