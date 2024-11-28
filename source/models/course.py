@@ -121,7 +121,14 @@ class Course:
                 xml_data = response.text  # XML
 
                 # Convert to dict and remove unnecessary info present in the original XML
-                dict_data = xmltodict.parse(xml_data)
+                try:
+                    dict_data = xmltodict.parse(xml_data)
+                except Exception as e:
+                    # Sometimes the IST server is in maintenance, causing an error here
+                    print("The following XML resulted in: ", str(e))
+                    print(xml_data)
+                    raise ValueError
+
                 dict_data = dict_data["rss"]["channel"]
                 if "item" in dict_data:
                     announcements_list = dict_data["item"]
@@ -158,12 +165,18 @@ class Course:
     ) -> list[dict[str, Announcement | AnnouncementActions]]:
         """Fetches the latest announcements list and returns a dict with the changes to be used by the bot (each "change" contains the announcement and the action type)"""
 
-        new_announcements = {
-            announcement.id: announcement
-            for announcement in self.__sort_announcements_by_date(
-                self.__fetch_announcements_list()
-            )
-        }
+        try:
+            new_announcements = {
+                announcement.id: announcement
+                for announcement in self.__sort_announcements_by_date(
+                    self.__fetch_announcements_list()
+                )
+            }
+        except ValueError:
+            # Sometimes the IST server is in maintenance, so if that's the case
+            # consider that there are no new modifications (it will recover whenever the server is back up online)
+            return []
+
         old_announcements = {
             announcement.id: announcement for announcement in self.announcements
         }
